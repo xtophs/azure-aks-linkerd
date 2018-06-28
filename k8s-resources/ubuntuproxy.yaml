@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: proxytest-deployment
+spec:
+  selector:
+    matchLabels:
+      app: proxytest
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      # unlike pod-nginx.yaml, the name is not included in the meta data as a unique name is
+      # generated from the deployment name
+      labels:
+        app: proxytest
+    spec:
+      dnsPolicy: ClusterFirst
+      containers:
+      - name: service
+        image: ubuntu
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: http_proxy
+          value: $(NODE_NAME):4140
+      command: [ "/bin/sh", "-c", "tail -f /dev/null" ]
